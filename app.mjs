@@ -1,37 +1,40 @@
-import express from 'express'
-import morgan from 'morgan';
-import bodyParser from 'body-parser';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import helmet from 'helmet';
-import compression from 'compression';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-
+import express from 'express';
+import { setup_middleware, PORT } from './Api/middlewares/setup.mjs';
+import databaseConnection from '../Uventlo-Backend/Api/config/database.mjs';
+import aiBot from './Api/middlewares/aiBot.mjs';
+import userRouter from './Api/routes/userRouter.mjs';
+import { sendWelcomeEmail } from './Api/services/emailService.mjs';
+import eventRouter from './Api/routes/eventRoutes.mjs';
+import taskRouter from './Api/routes/taskRoutes.mjs';
+import ticketRouter from './Api/routes/ticketRoutes.mjs';
+import floorRouter from './Api/routes/floorRoutes.mjs';
+import { createServer} from 'http'
+// import feedbackRouter from './Api/routes/feedbackRoutes.mjs';
+import  Server  from "socket.io";
 const app = express();
-app.use(morgan('dev'));
-morgan.token('body', (req, res) => JSON.stringify(req.body));
 
-dotenv.config({path: './Api/config/env/.env' });
+setup_middleware(app); // done
+app.use('/floor',floorRouter); // yet the auth
+app.use('/users',userRouter); // yet the auth 
+app.use('/event',eventRouter); // yet the auth too 
+app.use('/task',taskRouter); // yet the auth
+// app.use('/feedback',feedbackRouter); not finsihed yet
+app.use('/ticket',ticketRouter); // yet the auth too
+app.post('/email',sendWelcomeEmail) // done
+app.use('/ai',aiBot); // done
 
-let PORT = process.env.PORT;
 
-app.get("/",(Request,Response)=>{
-  Response.send("<h1>uwu</h1>")
-})
 
 app.listen(PORT, () => {
-  console.log(`server is running on port ${PORT} check here : http://localhost:${PORT}/`);
+  console.log(`Server is running on port ${PORT}. Check here: http://localhost:${PORT}/`);
 });
 
 
 
-// app.set('view engine', 'ejs');
-//
-// // Database connection
-// const dbURI = process.env.MONGODB_URI;
-// mongoose
-//   .connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
-//   .then((result) => app.listen(3000))
-//   .catch((err) => console.log(err));
-//
+
+
+
+
+// app.get('/admin-only', authMiddleware, isAdmin, (req, res) => {  // just for jawad so he can start testing the auth
+//   res.status(200).json({ message: 'Admin access granted' });
+// });
