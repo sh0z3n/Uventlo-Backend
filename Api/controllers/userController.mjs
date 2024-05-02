@@ -4,8 +4,10 @@ import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcrypt'
 import zxcvbn from 'zxcvbn'
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import passport from 'passport';
-// import { sendEmail } from '../utils/sendEmail.mjs'
+import { sendWelcomeEmail } from '../services/emailService.mjs';
+import { sendResetPasswordEmail } from '../services/emailService.mjs';
 
 
 
@@ -20,7 +22,7 @@ export const getAllUsers =  async (req,res) =>{
             if (!users) {
                 return res.status(404).json({message:'guess what you just lost your dat'});
             };
-            console.log('waiting ya hviv ')
+            console.log('waiting for the users flow ')
             return res.status(200).json(users);
         }
 
@@ -36,23 +38,19 @@ export const getAllUsers =  async (req,res) =>{
 // @access  Private
 
 export const getUserById = asyncHandler(async (req, res) => {
-    try {
-        const name = req.params.name;
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId);
 
-        // Construct the filter object
-        const filter = { name: name };
-
-        const user = await User.findOne(filter);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        
-        res.status(200).json(user);
-    } catch (err) {
-        return res.status(500).json({ message: 'Error while fetching user, check your connection', error: err.message });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-});
 
+    res.status(200).json(user);
+  } catch (err) {
+    return res.status(500).json({ message: 'Error while fetching user, check your connection', error: err.message });
+  }
+});
 
 
 export const registerUser = asyncHandler(async (req, res) => {
@@ -60,49 +58,46 @@ export const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password, role } = req.body;
 
     // chwy the consfirmation wa 7viv 
-
+    
     if (!name || name.trim().length < 3) {
-        return res.status(400).json({ message: '3 chrachters long Name is required !' });
+      return res.status(400).json({ message: '3 chrachters long Name is required !' });
     }
-
+    
     if (!validator.isEmail(email)) {
-        return res.status(400).json({ message: 'Invalid email adress' });
+      return res.status(400).json({ message: 'Invalid email adress' });
     }
     
     const passwordStrength = zxcvbn(password);
     if (passwordStrength.score < 0.5) {
-    throw new Error(`Password is too weak. ${passwordStrength.feedback.warning}`);
-  }
-
+      throw new Error(`Password is too weak. ${passwordStrength.feedback.warning}`);
+    }
+    
     const userExists = await User.findOne({ email });
     if (userExists) {
-        console.log("b3rtha drt safi user 1000 mra" );
-        return res.status(400).json({ message: 'User already exists' })};
-
-
-    // cooooock awlidou     
-    const salt = await bcrypt.genSalt(3);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await User.create({
+      console.log("b3rtha drt safi user 1000 mra" );
+      return res.status(400).json({ message: 'User already exists' })};
+      
+      
+      // cooooock awlidou     
+      const salt = await bcrypt.genSalt(3);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      
+      const user = await User.create({
         name,
         email,
         password: hashedPassword,
         role,
-    });
-
-    //   await sendEmail({ // ki ndirou mailing service
-    //     to: newUser.email,
-    //     subject: 'Welcome to Uventlo ,
-    //     text: 'Thank you for signing up , uventlo is the best app to manage your events'
-    // });
-
-    const token = jwt.sign({
-         userId: user._id,
-         userRole: user.role 
-        }, process.env.JWT_SECRET, { expiresIn: '7d' });
-        
-    res.status(201).json({message:'User created successfully',user:user,token:token});
+      });
+      
+     await sendWelcomeEmail(name,email);
+      
+      const token = jwt.sign({
+        userId: user._id,
+        userRole: user.role 
+      }, process.env.JWT_SECRET, { expiresIn: '1d' });
+      
+      res.set('Authorization', `Bearer ${token}`);
+      res.status(201).json({message:'User created successfully',user:user,token:token});
 } catch (error) {
     res.status(500).json({ message: 'Error while registering user :(', error: error.message });
 
@@ -135,17 +130,12 @@ export const loginUser = asyncHandler(async (req, res) => {
 
         const token = jwt.sign({
             userId: user._id,
-            userRole: user.role
-        }, process.env.JWT_SECRET, { expiresIn: '2d' });
+            userRole: user.role,
+        }, process.env.JWT_SECRET);
 
-        if (user.role === 'admin') {
-            res.cookie('isAdmin', 'true', { 
-                httpOnly: false, // Cookie cannot be accessed by client-side scripts
-                secure: false, 
-                sameSite: 'none', // Cookie is not sent in cross-site requests
-                maxAge: 2 * 24 * 60 * 60 * 1000 // 2 days expiry
-            });
-        }
+        role = user.role
+
+        res.set('Authorization', `Bearer ${token}`);
         res.cookie('token', token, { httpOnly: true, maxAge: 2 * 24 * 60 * 60 * 1000 }); // 2 days expiry
         res.status(200).json({ message: 'User logged in successfully', token });
     }
@@ -159,91 +149,63 @@ export const loginUser = asyncHandler(async (req, res) => {
 // @desc    Update a user
 // @route   PUT /api/v1/auth/users/:id
 // @access  Private
-
 export const updateUser = asyncHandler(async (req, res) => {
-    const { name, email, role , bio , password } = req.body;
-    console.log(name)
+    const { name, email, role, bio, password } = req.body;
+    console.log(name);
+  
     try {
-      // Extract token from the request cookie
-      const token = req.cookies.token;
-      console.log(token)
+      const userId = req.params.id;
   
-      if (!token) {
-          return res.status(401).json({ message: 'Unauthorized: Missing token' });
-      }
+      let user = await User.findById(userId);
   
-      // Verify the token and extract user ID
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log(decoded)
-      const userId = decoded.userId;
-      console.log(userId)
-  
-
-    let user = await User.findById(userId) ;// or email  nbdlouha kima n7bou
-    if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-
-    }
-    user.name = name || user.name;
-    user.email = email || user.email;
-    user.role = role || user.role;
-    user.bio = bio || user.bio;
-
-    const password_match = await bcrypt.compare(password, user.password);
-    if (!password_match) {
-        return res.status(401).json({ message: 'Invalid password' }.redirect('/'))};
-
-    if (password ) {
-        user.password = await bcrypt.hash(password, 2); 
-    }
-    
-    await user.save();
-    res.status(200).json({ message: 'Profile updated successfully', user });
-    } 
-    catch (err)
-    {
-        console.error('safi m7bch ybdl compte bio brk:', err);
-        res.status(500).json({ message: 'Internal server error' });
-    };
-
-});
-
-
-export const deleteUser = asyncHandler( (async (req, res) => {
-    const name = req.params.name;
-    console.log(name)
-    try {
-      // Extract token from the request cookie
-      const token = req.cookies.token;
-      console.log(token)
-  
-      if (!token) {
-          return res.status(401).json({ message: 'Unauthorized: Missing token' });
-      }
-  
-      // Verify the token and extract user ID
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log(decoded)
-      const userId = decoded.userId;
-      console.log(userId)
-  
-  
-      // Proceed with deleting the user
-      const user = await User.findOneAndDelete({ _id: userId });
       if (!user) {
-          return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      user.name = name || user.name;
+      user.email = email || user.email;
+      user.role = role || user.role;
+      user.bio = bio || user.bio;
+  
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) {
+        return res.status(401).json({ message: 'Invalid password' });
+      }
+  
+      if (password) {
+        user.password = await bcrypt.hash(password, 2);
+      }
+  
+      await user.save();
+      res.status(200).json({ message: 'Profile updated successfully', user });
+    } catch (err) {
+      console.error('Error updating user profile:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+
+export const deleteUser = asyncHandler(async (req, res) => {
+    const userId = req.params.id;
+    console.log(userId);
+  
+    try {
+      const user = await User.findOneAndDelete({ _id: userId });
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
       }
   
       res.status(200).json({ message: 'User deleted successfully' });
-  } catch (error) {
+    } catch (error) {
       console.error('Error deleting user:', error);
       if (error.name === 'JsonWebTokenError') {
-          return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+        return res.status(401).json({ message: 'Unauthorized: Invalid token' });
       }
       res.status(500).json({ message: 'Internal server error' });
-  }
-  }));
-
+    }
+  });
+  
 
 
 
@@ -266,3 +228,88 @@ export const deleteUser = asyncHandler( (async (req, res) => {
 
 
 
+export function generateAccessToken(username) {
+  return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '10000000s' });
+}
+
+
+
+export const logoutUser = async (req, res) => {
+  res.clearCookie('token');
+  res.status(200).json({ message: 'Logged out successfully' });
+};
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  // Check if the email exists in the database
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: 'Email not found' });
+  }
+
+  // Generate a random OTP code
+  const otp = crypto.randomInt(100000, 999999).toString();
+
+  console.log(otp)
+  // Save the OTP and expiry time to the user document
+  user.resetPasswordOTP = otp;
+  user.resetPasswordOTPExpires = Date.now() + 36000000000000000; // 1 hour
+  await user.save({ force: true });
+
+  // Send the OTP email
+  await sendResetPasswordEmail(email, otp);
+
+  res.status(200).json({ message: 'Password reset OTP sent to your email' });
+});
+
+
+
+
+
+export const verifyResetPasswordOTP = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+
+  // Find the user with the provided email
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: 'Email not found' });
+  }
+
+  // Check if the OTP matches and is not expired
+  if (user.resetPasswordOTP === otp ) {
+    res.status(200).json({ message: 'OTP verified successfully' });
+  } else {
+    res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+});
+
+
+export const updatePasswordWithOTP = asyncHandler(async (req, res) => {
+  const { email, newPassword , otp } = req.body;
+
+  // Find the user with the provided email
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: 'Email not found' });
+  }
+
+
+
+  // Update the user's password
+  if (user.resetPasswordOTP != otp ) {
+    return res.status(401).json({message: "invalid otp :( "})
+  }
+  
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+  user.password = hashedPassword;
+  user.resetPasswordOTP = undefined;
+  user.resetPasswordOTPExpires = undefined;
+  await user.save();
+
+
+  res.status(200).json({ message: 'Password updated successfully' });
+
+}
+  );

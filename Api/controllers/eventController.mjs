@@ -1,8 +1,9 @@
 import Event from '../models/Event.mjs';
 import Feedback from '../models/Feedback.mjs';
 import asyncHandler from 'express-async-handler';
+import Stripe from 'stripe';
 
-
+const stripe = Stripe("sk_test_51PBEikRwJlue2n0pHhZOSZAuro9Llo2CLCW4vviyUkKyJjckaScO5Xtra269wZzDR0AOkLStsb2nEDVZkOoKlrSN00hXOpi4VQ")
 
 export const createEvent = asyncHandler(async (req, res) => {
   try {
@@ -23,10 +24,6 @@ export const createEvent = asyncHandler(async (req, res) => {
   }
 });
 
-
-
-
-
 export const getAllEvents = asyncHandler(async (req, res) => {
     try {
         const events = await Event.find();
@@ -39,16 +36,10 @@ export const getAllEvents = asyncHandler(async (req, res) => {
     }
 });
 
-
-
-
 export const getEventById = asyncHandler(async (req, res) => {
     try {
-          const name = req.params.name;
-          const filter = { name: name };
-
-         const event = await Event.findOne(filter); // if any one is coding through this  ,  my db ain't having the index till now i will add it later or maybe not 
-        // const event = await Event.findById(req.params.id); m3ndich id XD
+        const id = req.params.id;
+        const event = await Event.findById(id);
         if (!event) {
             return res.status(404).json({ message: 'Event not found' });
         }
@@ -58,13 +49,10 @@ export const getEventById = asyncHandler(async (req, res) => {
     }
 });
 
-
 export const updateEvent = asyncHandler(async (req, res) => {
   try {
-     const temp = req.params.name; // same here khoya
-     const filter = { name: temp };
-
-    const event = await Event.findOne(filter)
+    const id = req.params.id;
+    const event = await Event.findById(id);
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
@@ -85,23 +73,36 @@ export const updateEvent = asyncHandler(async (req, res) => {
   }
 });
 
-
-
-
 export const deleteEvent = asyncHandler(async (req, res) => {
     try {
-        const event = await Event.findOneAndDelete({ name: req.params.name });
+        const id = req.params.id;
+        const event = await Event.findByIdAndDelete(id);
         if (!event) {
             return res.status(404).json({ message: 'Event not found' });
         }
-        // if (req.user.role !=='admin')
-        // {  it will help ya later f auth khoya jawad
-        //     return res.status(403).json({ message: 'Not authorized to delete this event' });
-        // }
-        res.status(200).json({ message: 'Event dleted succefully' });
+        res.status(200).json({ message: 'Event deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error while deleting event', error: error.message });
     }
 });
 
+export const payment = asyncHandler (async (req,res) =>{
+    const { amount, currency, token } = req.body;
+
+  try {
+    // Create a payment intent using the Stripe API
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency,
+      payment_method: token,
+      confirm: true,
+    });
+
+    // Return the payment intent status to the client
+    res.json({ status: paymentIntent.status });
+
+  } catch (error) {
+    res.status(500).json({ error: 'An error occurred while processing the payment.' });
+  }
+});
 

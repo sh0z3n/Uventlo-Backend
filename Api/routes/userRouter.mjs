@@ -7,24 +7,29 @@ import {
   loginUser,
   updateUser,
   deleteUser,
+  resetPassword,
+  logoutUser
 } from '../controllers/userController.mjs';
 
-import {isAdmin} from '../middlewares/isAdmin.mjs';
 
-import { authMiddleware } from '../middlewares/authMiddleware.mjs';
+import { authMiddleware , isAdmin } from '../middlewares/authMiddleware.mjs';
 
 
 const router = express.Router();
 
+
+
+
+
 // @desc Get all users
 // @route GET /api/v1/users
 // @access Admin
-router.get('/list',  getAllUsers);  // done
+router.get('/list', authMiddleware  ,isAdmin, getAllUsers);  // done
 
 // @desc Get a specific user
 // @route GET /api/v1/users/:id
 // @access public
-router.get('/:name',  getUserById ); //done 
+router.get('/:id',  getUserById ); //done 
 
 // @desc Register a new user
 // @route POST /api/v1/auth/register
@@ -40,25 +45,22 @@ router.post('/login', loginUser); // done
 //@route GET /api/v1/auth/logout
 //@access Private
 
-router.get('/logout', (req, res) => {   // not yet fixed , i will add in controlllers ky nkml auth 
-  res.clearCookie('token');
-  res.status(200).json({ message: 'Logged out successfully' });
-});
-
+router.get('/logout', logoutUser);
 
 // @desc Update a user
 // @route PUT /api/v1/users/:id
 // @access private
-router.put('/:name',  updateUser); //done
+router.put('/:id',  updateUser); //done
 
 // @desc Partially update a user
 // @route PATCH /api/v1/users/:id
 // @access private
-router.patch('/:name',  updateUser);//done
+router.patch('/:id',  updateUser);//done
 
 // @desc Delete a user
 // @route DELETE /api/v1/users/:id
 // @access private 
-router.delete('/delete/:name' ,deleteUser); //done 
+router.delete('/:id' ,deleteUser); //done 
+
 
 export default router;

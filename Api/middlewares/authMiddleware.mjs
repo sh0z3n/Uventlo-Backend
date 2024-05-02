@@ -1,37 +1,40 @@
-import passport from 'passport';
-import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+import jwt from 'jsonwebtoken';
+import asyncHandler from 'express-async-handler';
 import User from '../models/User.mjs';
 
-const options = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.JWT_SECRET,
-};
+export const authMiddleware = asyncHandler(async (req, res, next) => {
+    const token = (req.headers.authorization && req.headers.authorization.split(' ')[1]) || req.cookies.token;
 
-const jwtStrategy = new JwtStrategy(options, async (payload, done) => {
-  try {
-    const user = await User.findById(payload.userId);
-    console.log(user)
+    console.log(token)
 
-    if (!user) {
-      return done(null, false);
+    if (!token) {
+        return res.status(401).json({ message: 'Authorization token not found' });
     }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET );
 
-    return done(null, user);
-  } catch (error) {
-    return done(error, false);
-  }
+        req.user = { _id: decoded.userId, role: decoded.userRole };
+        
+        console.log(decoded.userId)
+        const user = await User.findById(decoded.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        req.user.role = decoded.userRole
+        console.log(req.user.role)
+        next();
+
+    } 
+    catch (error) {
+        return res.status(401).json({ message: 'Invalid token' }).redirect("/login");
+    }
 });
 
-passport.use(jwtStrategy);
-
-// Authentication middleware
-export const authMiddleware = passport.authenticate('jwt', { session: false });
-
-// Admin role verification middleware
 export const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next(); // User is authorized as an admin
-  } else {
-    return res.status(403).json({ message: 'Admin access required' });
-  }
-};
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized: Admin access required' });
+    }
+    next();
+  };

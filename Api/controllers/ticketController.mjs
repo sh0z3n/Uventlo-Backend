@@ -168,7 +168,7 @@ export const getTickets = async (req, res) => {
 
 
 
-
+// we need to import that qr string whatever
 
 // export const getqrforticket = async (req, res) => {
 //     try {

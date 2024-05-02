@@ -52,9 +52,11 @@ const userSchema = new mongoose.Schema(
         },
         picture: String,
         bio: String,
-        resetPasswordToken: String,
-        resetPasswordExpire: Date,
+        resetPasswordOTP: String,
+        resetPasswordOTPExpire: Date,
+
     },
+    
     {
         timestamps: true,
     }

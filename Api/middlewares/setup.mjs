@@ -24,7 +24,6 @@ const setup_middleware = (app) =>{
     morgan.token('body', (req, res) => JSON.stringify(req.body));
     app.use(bodyParser.json()).use(cookieParser()).use(cors());
     app.set('view engine', 'ejs');
-    
 }
 
 

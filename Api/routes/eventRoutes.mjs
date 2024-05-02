@@ -1,6 +1,6 @@
 import express from 'express';
 import {isAdmin} from '../middlewares/isAdmin.mjs';
-import { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent } from '../controllers/eventController.mjs';
+import { createEvent, getAllEvents, getEventById, updateEvent, deleteEvent  } from '../controllers/eventController.mjs';
 
 const router = express.Router();
 
@@ -17,17 +17,18 @@ router.get('/list', getAllEvents); // done
 // @desc Get a specific event
 // @route GET /api/v1/events/:id
 // @access Public
-router.get('/:name', getEventById); // done
+router.get('/:id', getEventById); // done
 
 // @desc Update an event
 // @route PUT /api/v1/events/:id
 // @access Admin
-router.put('/:name',  updateEvent); // done
+router.put('/:id',  updateEvent); // done
 
 // @desc Delete an event
 // @route DELETE /api/v1/events/:id
 // @access Admin
-router.delete('/:name' , deleteEvent); // done
+router.delete('/:id' , deleteEvent); // done
+
 
 
 

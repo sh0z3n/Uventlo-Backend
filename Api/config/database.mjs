@@ -13,12 +13,11 @@ dotenv.config({ path: path.resolve(__dirname, 'env', '.env') });
 
 // Retrieve MongoDB connection URI from environment variables
 const uri = process.env.MONGODB_URI;
-
 // Connect to MongoDB
 mongoose.connect(uri, {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-      // poolSize : 20,
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true,
+  // poolSize : 20,
 }).then(() => {
   console.log('Connected to MongoDB');
 }).catch((error) => {

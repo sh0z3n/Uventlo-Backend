@@ -8,21 +8,28 @@ import eventRouter from './Api/routes/eventRoutes.mjs';
 import taskRouter from './Api/routes/taskRoutes.mjs';
 import ticketRouter from './Api/routes/ticketRoutes.mjs';
 import floorRouter from './Api/routes/floorRoutes.mjs';
+import passRouter from './Api/routes/passRoutes.mjs';
 import { createServer} from 'http'
 // import feedbackRouter from './Api/routes/feedbackRoutes.mjs';
+import { authMiddleware , isAdmin } from './Api/middlewares/authMiddleware.mjs';
+import paymentRoutes from './Api/routes/paymentRoute.mjs';
 import  Server  from "socket.io";
+import  createLiveStream  from './Api/utils/livestream.mjs';
 const app = express();
 
 setup_middleware(app); // done
 app.use('/floor',floorRouter); // yet the auth
-app.use('/users',userRouter); // yet the auth 
+app.use('/users' ,userRouter); // yet the auth 
 app.use('/event',eventRouter); // yet the auth too 
 app.use('/task',taskRouter); // yet the auth
 // app.use('/feedback',feedbackRouter); not finsihed yet
 app.use('/ticket',ticketRouter); // yet the auth too
 app.post('/email',sendWelcomeEmail) // done
 app.use('/ai',aiBot); // done
+app.use("/auth",passRouter);
 
+
+app.use('/api/payment', paymentRoutes); // the eth not working ( we don't have enough coins to test :( )
 
 
 app.listen(PORT, () => {
@@ -32,9 +39,13 @@ app.listen(PORT, () => {
 
 
 
+app.get("/",(req,res)=>{
+  res.send("playing arround")
+})
 
 
 
-// app.get('/admin-only', authMiddleware, isAdmin, (req, res) => {  // just for jawad so he can start testing the auth
-//   res.status(200).json({ message: 'Admin access granted' });
-// });
+app.get('/admin', authMiddleware, isAdmin, (req, res) => { 
+  console.log("admin is here ");
+  res.send(req.user.role);
+});

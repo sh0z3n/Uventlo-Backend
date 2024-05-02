@@ -1,20 +1,13 @@
 import express from 'express';
-// import { authMiddleware } from '../middleware/authMiddleware.js';
-// import { initiatePayment, handlePaymentCallback, getPaymentStatus } from '../controllers/paymentController.js';
-// this route is under development , it may not be implemented in the final version of the app
+import { createPaypalPayment, paypalPaymentSuccess, createEthereumPayment } from '../controllers/paymentController.mjs';
 
+const router = express.Router();
 
-// @desc Initiate a payment
-// @route POST /api/v1/payments
-// @access Private
-router.post('/payments', authMiddleware, initiatePayment);
+router.post('/paypal/create', createPaypalPayment);
+router.get('/paypal/success', paypalPaymentSuccess);
+router.get('/paypal/cancel', (req, res) => {
+  res.send('Payment cancelled');
+});
+router.post('/ethereum/create', createEthereumPayment);
 
-// @desc Handle payment callback
-// @route POST /api/v1/payments/callback
-// @access Public
-router.post('/payments/callback', handlePaymentCallback);
-
-// @desc Get payment status
-// @route GET /api/v1/payments/:paymentId
-// @access Private
-router.get('/payments/:paymentId', authMiddleware, getPaymentStatus);
+export default router;
