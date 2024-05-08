@@ -32,7 +32,7 @@ app.use("/auth",passRouter);
 app.use('/api/payment', paymentRoutes); // the eth not working ( we don't have enough coins to test :( )
 
 
-app.listen(PORT, () => {
+app.listen(3000, () => {
   console.log(`Server is running on port ${PORT}. Check here: http://localhost:${PORT}/`);
 });
 
