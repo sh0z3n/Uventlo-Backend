@@ -1,7 +1,7 @@
 import express from 'express';
 import { setup_middleware, PORT } from './Api/middlewares/setup.mjs';
-import databaseConnection from '../Uventlo-Backend/Api/config/database.mjs';
-import aiBot from './Api/middlewares/aiBot.mjs';
+import databaseConnection from './Api/config/database.mjs';
+import aiRouter from './Api/routes/aiRoutes.mjs';
 import userRouter from './Api/routes/userRouter.mjs';
 import { sendWelcomeEmail } from './Api/services/emailService.mjs';
 import eventRouter from './Api/routes/eventRoutes.mjs';
@@ -25,7 +25,7 @@ app.use('/task',taskRouter); // yet the auth
 // app.use('/feedback',feedbackRouter); not finsihed yet
 app.use('/ticket',ticketRouter); // yet the auth too
 app.post('/email',sendWelcomeEmail) // done
-app.use('/ai',aiBot); // done
+app.use('/ai',aiRouter); // done
 app.use("/auth",passRouter);
 
 

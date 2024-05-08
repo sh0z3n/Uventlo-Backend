@@ -27,13 +27,7 @@ const userSchema = new mongoose.Schema(
         password :{
             type : String,
             required : true,
-            minlength : [8,'password have to be more than 8 letters'],
-            advice : {
-                type : String,
-                validate : {
-                    // validator : (value) => zxcvbn(value).score > 0.5,
-                    // message : 'Password is weak !'
-                }}
+            minlength : [8,'password have to be more than 8 letters']
         },
 
         role :{
@@ -54,6 +48,8 @@ const userSchema = new mongoose.Schema(
         bio: String,
         resetPasswordOTP: String,
         resetPasswordOTPExpire: Date,
+        lastFailedLoginTime: { type: Date, default: null },
+        isActive: { type: Boolean, default: true },
 
     },
     

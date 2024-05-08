@@ -7,6 +7,7 @@ import {
   loginUser,
   updateUser,
   deleteUser,
+  desactivateUser,
   resetPassword,
   logoutUser
 } from '../controllers/userController.mjs';
@@ -16,10 +17,6 @@ import { authMiddleware , isAdmin } from '../middlewares/authMiddleware.mjs';
 
 
 const router = express.Router();
-
-
-
-
 
 // @desc Get all users
 // @route GET /api/v1/users
@@ -41,11 +38,6 @@ router.post('/register', registerUser); // done
 // @access Public
 router.post('/login', loginUser); // done
 
-//@desc Logout a user
-//@route GET /api/v1/auth/logout
-//@access Private
-
-router.get('/logout', logoutUser);
 
 // @desc Update a user
 // @route PUT /api/v1/users/:id
@@ -61,6 +53,20 @@ router.patch('/:id',  updateUser);//done
 // @route DELETE /api/v1/users/:id
 // @access private 
 router.delete('/:id' ,deleteUser); //done 
+
+
+//@desc Logout a user
+//@route GET /api/v1/auth/logout
+//@access Private
+
+router.get('/logout', logoutUser);
+
+
+// @desc Desactivate a user
+// @route DELETE /api/v1/users/:id
+// @access private
+
+router.delete('/desactivate/:id', deleteUser); //done
 
 
 export default router;
