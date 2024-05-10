@@ -25,4 +25,13 @@ import { updatePasswordWithOTP } from '../controllers/userController.mjs';
 // @access Public
 router.put('/reset', updatePasswordWithOTP);
 
+
+import { activateUser } from '../controllers/userController.mjs';
+
+// @desc Activate user
+// @route POST /api/v1/auth/activate
+// @access Private
+
+router.post('/activate/:id', activateUser);
+
 export default router;

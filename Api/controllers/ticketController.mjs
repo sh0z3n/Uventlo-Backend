@@ -2,53 +2,43 @@
 import Ticket from '../models/Ticket.mjs';
 import User from '../models/User.mjs';
 import Event from '../models/Event.mjs';
+import qrcode from 'qrcode'
 
 // @desc Create a new ticket
 export const createTicket = async (req, res) => {
-    try {
-      // Extract ticket data from the request body
-      const { title, owner, email, type, date, location, eventname } = req.body;
-  
-      // Create a new ticket object using the Ticket model
-      const newTicket = new Ticket({
-        title,
-        owner,
-        email,
-        type,
-        eventname,
-        date,
-        location,
-      });
-  
-      // Check if the owner exists
-      const check = await User.findOne({ _id: owner });
-      if (!check) {
-        return res.status(400).json({ message: "User not found" });
-      }
-  
-      // Check if the event exists
-      const checkEvent = await Event.findOne({ _id: eventname });
-      if (!checkEvent) {
-        return res.status(400).json({ message: "Event not found" });
-      }
-  
-      // Save the new ticket to the database
-      await newTicket.save();
-      console.log('Ticket saved to the database:', newTicket);
-  
-      // Respond with a success message and the created ticket object
-      res.status(201).json({
-        message: 'Ticket created successfully',
-        ticket: newTicket
-      });
-    } catch (error) {
-      // Handle any errors that occur during ticket creation
-      res.status(400).json({
-        message: 'Failed to create ticket',
-        error: error.message
-      });
+  try {
+    const { owner, event, ticketData } = req.body;
+
+    const user = await User.findById(owner);
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
     }
-  };
+
+    const events = await Event.findById(event);
+    if (!events) {
+      return res.status(400).json({ message: "Event not found" });
+    }
+
+    // const qrCodeData = JSON.stringify({ userName: user.name, eventDate: events.date, userEmail: user.email, ...ticketData });
+    // const qrCode = await qrcode.toDataURL(qrCodeData);
+
+    const newTicketData = { owner, event, ...ticketData };
+    const newTicket = new Ticket(newTicketData);
+    await newTicket.save();
+
+    await User.findByIdAndUpdate(owner, { $push: { tickets: newTicket._id, attendedEvents: { event: event, date: new Date() } } });
+   
+    res.status(201).json({
+      message: 'Ticket created successfully',
+      ticket: newTicket
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: 'Failed to create ticket',
+      error: error.message
+    });
+  }
+};
 
 // @desc   Get all tickets
 export const getTickets = async (req, res) => {
@@ -69,13 +59,11 @@ export const getTickets = async (req, res) => {
     try {
       const ticketId = req.params.id;
   
-      // Check if the ticket exists
       const ticket = await Ticket.findById(ticketId);
       if (!ticket) {
         return res.status(404).json({ message: 'Ticket not found' });
       }
   
-      // Check if the user making the request is authorized to delete the ticket
       const user = await User.findById(ticket.owner);
       if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -100,13 +88,11 @@ export const getTickets = async (req, res) => {
       const ticketId = req.params.id;
       const updatedTicketData = req.body;
   
-      // Check if the ticket exists
       const ticket = await Ticket.findById(ticketId);
       if (!ticket) {
         return res.status(404).json({ message: 'Ticket not found' });
       }
   
-      // Check if the user making the request is authorized to update the ticket
       const user = await User.findById(ticket.owner);
       if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -135,14 +121,12 @@ export const getTickets = async (req, res) => {
     try {
       const ticketId = req.params.id;
   
-      // Find the ticket by ID
       const ticket = await Ticket.findById(ticketId);
   
       if (!ticket) {
         return res.status(404).json({ message: 'Ticket not found' });
       }
   
-      // Check if the user making the request is authorized to view the ticket
       const user = await User.findById(ticket.owner);
       if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });

@@ -47,29 +47,80 @@ const eventSchema = new mongoose.Schema(
             type:Boolean,
             default : false,
         },
-
+        tags :[{
+            type:String
+        }],
 
         mode :{
             type : String,
-            required : true,
+            // required : true,
             enum : ['online','onsite','hybrid'],
         },
 
         has_floor : {type : Boolean, default : false},
 
-        attendees:{
-            type : [mongoose.Schema.Types.ObjectId],
-            // required : flase,
+        attendees: [{
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+            },
+            attendeeType: {
+                type: String,
+            },
+        }],
+        totalSpots: {
+            type: Number,
+            default: 0,
         },
-
-        total_spots : Number
+        tasks: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Task',
+        }],
 
     },
     { timestamps : true},
 );
 
-eventSchema.methods.left_places = function (){
-    return this.total_spots - this.attendees.length;
-}
+eventSchema.statics.calculateRemainingSpots = async function () {
+    const events = await this.aggregate([
+        { $project: { totalSpots: this.totalSpots, attendeesCount: { $size: '$attendees' } } },
+        { $addFields: { remainingSpots: { $subtract: ['$totalSpots', '$attendeesCount'] } } }
+    ]);
+    return events;
+};
+
+eventSchema.statics.getAttendeeTypeCounts = async function() {
+    const attendeeCounts = await this.aggregate([
+      { $unwind: '$attendees' },
+      { $group: { _id: '$attendees.attendeeType', count: { $sum: 1 } } }
+    ]);
+  
+    return attendeeCounts.map(count => ({
+      type: count._id,
+      count: count.count
+    }));
+  };
+
+eventSchema.methods.calculateOverallAccomplishment = function() {
+    const totalTasks = this.tasks.length;
+    const completedTasks = this.tasks.filter(task => task.status === 'Completed').length;
+    return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  };
+
+eventSchema.statics.getNextEventDate = async function(currentEventId) {
+    const currentEvent = await this.findById(currentEventId);
+
+    if (!currentEvent) {
+        return null;
+    }
+
+    const nextEvent = await this.findOne({ _id: { $gt: currentEvent._id } }, null, { sort: { _id: 1 } });
+
+    if (!nextEvent) {
+        return null; 
+    }
+
+    return nextEvent.date;
+};
 
 export default mongoose.model('Event',eventSchema);

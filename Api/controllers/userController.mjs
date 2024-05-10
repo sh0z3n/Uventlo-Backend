@@ -7,21 +7,19 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendWelcomeEmail } from '../services/emailService.mjs';
 import { sendResetPasswordEmail } from '../services/emailService.mjs';
-
+import { sendConfirmationCode } from '../services/emailService.mjs';
+import { sendDeactivationEmail } from '../services/emailService.mjs';
 
 
 // @desc    Get all  users
-// @route   Get /api/v1/auth/users
-// @access  Admin
 
 export const getAllUsers =  async (req,res) =>{
         try
         {
             const users = await User.find();
             if (!users) {
-                return res.status(404).json({message:'guess what you just lost your dat'});
+                return res.status(404).json({message:'No Users Found'});
             };
-            console.log('waiting for the users flow ')
             return res.status(200).json(users);
         }
 
@@ -33,8 +31,6 @@ export const getAllUsers =  async (req,res) =>{
 };
 
 // @desc    Get a specific user
-// @route   Get /api/v1/auth/users/:id
-// @access  Private
 
 export const getUserById = asyncHandler(async (req, res) => {
   try {
@@ -52,9 +48,11 @@ export const getUserById = asyncHandler(async (req, res) => {
 });
 
 
+// desc Register a user
+
 export const registerUser = asyncHandler(async (req, res) => {
     try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     
     if (!name || name.trim().length < 3) {
@@ -77,15 +75,20 @@ export const registerUser = asyncHandler(async (req, res) => {
       
       const salt = await bcrypt.genSalt(3);
       const hashedPassword = await bcrypt.hash(password, salt);
-      
+      const code = crypto.randomInt(100000, 999999).toString();
+
       const user = await User.create({
         name,
         email,
         password: hashedPassword,
-        role,
+        isActive: false,
+        code
       });
-      
-     await sendWelcomeEmail(name,email);
+    // await sendWelcomeEmail(name,email);
+    // await user.save({ force: true });
+
+    await sendConfirmationCode(email, code);
+
       
       const token = jwt.sign({
         userId: user._id,
@@ -93,16 +96,14 @@ export const registerUser = asyncHandler(async (req, res) => {
       }, process.env.JWT_SECRET, { expiresIn: '1d' });
       
       res.set('Authorization', `Bearer ${token}`);
-      res.status(201).json({message:'User created successfully',user:user,token:token});
+      res.status(201).json({message:'User created successfully , Please check your email for confirmation ',user:user,token:token});
 } catch (error) {
     res.status(500).json({ message: 'Error while registering user :(', error: error.message });
 
 }});
 
-// @desc    Login a user
-// @route   POST /api/v1/auth/login
-// @access  Public
 
+// desc login user 
 
 export const loginUser = asyncHandler(async (req, res) => {
     try 
@@ -119,7 +120,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         if (!user) { return res.status(404).json({ message: 'User not found' }); }
 
         if (!user.isActive) {
-          return res.status(401).json({ message: 'User is deactivated' });
+          return res.status(401).json({ message: 'User account is still deactivated ' });
 
         }
 
@@ -142,13 +143,10 @@ export const loginUser = asyncHandler(async (req, res) => {
 
           await user.save();
 
-
-
         const token = jwt.sign({
             userId: user._id,
             userRole: user.role,
         }, process.env.JWT_SECRET);
-
 
         res.set('Authorization', `Bearer ${token}`);
         res.cookie('token', token, { httpOnly: true, maxAge: 2 * 24 * 60 * 60 * 1000 }); // 2 days expiry
@@ -160,15 +158,11 @@ export const loginUser = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Update a user
-// @route   PUT /api/v1/auth/users/:id
-// @access  Private
+// @desc : in this function you gotta use the password whenever you make the change (security measure)
 export const updateUser = asyncHandler(async (req, res) => {
-    const { name, email, role, bio, password } = req.body;
-    console.log(name);
-  
     try {
       const userId = req.params.id;
+      const updates = req.body;
   
       let user = await User.findById(userId);
   
@@ -176,21 +170,21 @@ export const updateUser = asyncHandler(async (req, res) => {
         return res.status(404).json({ message: 'User not found' });
       }
   
-      user.name = name || user.name;
-      user.email = email || user.email;
-      user.role = role || user.role;
-      user.bio = bio || user.bio;
+      const passwordMatch = await bcrypt.compare(updates.password, user.password);
   
-      const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
         return res.status(401).json({ message: 'Invalid password' });
       }
   
-      if (password) {
-        user.password = await bcrypt.hash(password, 2);
+      if (updates.password) {
+        updates.password = await bcrypt.hash(updates.password, 12);
       }
   
-      await user.save();
+      user = await User.findByIdAndUpdate(userId, updates, {
+        new: true,
+        runValidators: true,
+      });
+  
       res.status(200).json({ message: 'Profile updated successfully', user });
     } catch (err) {
       console.error('Error updating user profile:', err);
@@ -199,12 +193,12 @@ export const updateUser = asyncHandler(async (req, res) => {
   });
 
 
+
 export const deleteUser = asyncHandler(async (req, res) => {
     const userId = req.params.id;
-    console.log(userId);
   
     try {
-      const user = await User.findOneAndDelete({ _id: userId });
+      const user = await User.findByIdAndDelete(userId);
   
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
@@ -218,15 +212,14 @@ export const deleteUser = asyncHandler(async (req, res) => {
       }
       res.status(500).json({ message: 'Internal server error' });
     }
-  });
-  
+});
 
-export function generateAccessToken(username) {
-  return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '10000000s' });
-}
-
+// export function generateAccessToken(username) {
+//   return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '10000000s' });
+// }
 
 
+// desc : logout a user 
 export const logoutUser = async (req, res) => {
   res.clearCookie('token');
   res.status(200).json({ message: 'Logged out successfully' });
@@ -235,17 +228,14 @@ export const logoutUser = async (req, res) => {
 export const resetPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
-  // Check if the email exists in the database
   const user = await User.findOne({ email });
   if (!user) {
     return res.status(400).json({ message: 'Email not found' });
   }
 
-  // Generate a random OTP code
   const otp = crypto.randomInt(100000, 999999).toString();
 
   console.log(otp)
-  // Save the OTP and expiry time to the user document
   user.resetPasswordOTP = otp;
   user.resetPasswordOTPExpires = Date.now() + 3600000000; 
   await user.save({ force: true });
@@ -257,19 +247,16 @@ export const resetPassword = asyncHandler(async (req, res) => {
 });
 
 
-
-
+// desc : this route verify otp ( for dev only )  
 
 export const verifyResetPasswordOTP = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
 
-  // Find the user with the provided email
   const user = await User.findOne({ email });
   if (!user) {
     return res.status(400).json({ message: 'Email not found' });
   }
 
-  // Check if the OTP matches and is not expired
   if (user.resetPasswordOTP === otp ) {
     res.status(200).json({ message: 'OTP verified successfully' });
   } else {
@@ -277,7 +264,7 @@ export const verifyResetPasswordOTP = asyncHandler(async (req, res) => {
   }
 });
 
-
+//desc: update the password of the user 
 export const updatePasswordWithOTP = asyncHandler(async (req, res) => {
   const { email, newPassword , otp } = req.body;
 
@@ -307,6 +294,8 @@ export const updatePasswordWithOTP = asyncHandler(async (req, res) => {
 }
   ); 
 
+//desc: desactivating a user profile 
+
 export const desactivateUser = asyncHandler(async (req, res) => {
   const userId = req.params.id;
 
@@ -315,6 +304,11 @@ export const desactivateUser = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Invalid password' });
+    }
+    sendDeactivationEmail(user.name , user.email)
     user.isActive = false;
     await user.save();
     res.status(200).json({ message: 'User deactivated successfully' });
@@ -323,4 +317,46 @@ export const desactivateUser = asyncHandler(async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+
+const resendConfirmationCode = async (email, code) => {
+  try {
+    await sendConfirmationCode(email, code);
+  } catch (error) {
+    throw new Error(`Failed to resend confirmation code email: ${error}`);
+  }
+};
+
+
+//@desc activate a user account when he register 
+
+export const activateUser = asyncHandler(async (req, res) => {
+  const userId = req.params.id;
+  let {code,resend} = req.body
+  resend = resend || false;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    if (resend) {
+      await resendConfirmationCode(user.email, user.code);
+      return res.status(200).json({ message: 'Confirmation code resent successfully' });
+    }
+    if (code == user.code) {
+      user.isActive = true;
+      user.code = undefined;
+      await user.save();
+      sendWelcomeEmail(user.name , user.email)
+      res.status(200).json({ message: 'User activated successfully' });
+    }
+    else {
+      res.status(400).json({ message: 'Invalid confirmation code' });
+    }
+  }
+  catch(error)
+  {
+    res.status(500).json({ message: 'Error while activating user', error: error.message });
+  }});
+
 

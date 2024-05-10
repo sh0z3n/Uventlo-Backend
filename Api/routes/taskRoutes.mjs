@@ -1,7 +1,6 @@
 import express from 'express';
 import morgan from 'morgan';
-
-import { createTask , getTask , getTasks , deleteTask , updateTask} from '../controllers/taskController.mjs'
+import { createTask  , getTasks , deleteTask , updateTask, getTaskbyID, getTasksByEventId} from '../controllers/taskController.mjs'
 
 
 const router = express.Router();
@@ -13,11 +12,18 @@ const router = express.Router();
 router.get('/list',getTasks);
 
 
+// @desc Get tasks of a specific event
+// @route Get /api/v1/task:eventid
+// access IDK
+
+router.get('/event/:eventId',getTasksByEventId);
+
+
 // @desc Get a specific task
 // @route GET /api/v1/tasks/:id
 // access admin 
 
-router.get('/:id',getTask);
+router.get('/:id',getTaskbyID);
 
 // @desc Update a task
 // @route /api/v1/tasks/update

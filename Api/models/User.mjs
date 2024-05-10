@@ -32,24 +32,43 @@ const userSchema = new mongoose.Schema(
 
         role :{
             type : String,
-            // enum : ['user','admin','organizer','vip'],
+            enum : ['user','organizer'],
             default : 'user',
-            required : true
         },
         loginAttempts: { type: Number, default: 0 } ,
-        social: {
+
+        social: { 
             facebook: String,
             twitter: String,
             linkedin: String,
             instagram: String,
             type: Map,
         },
+        location : String,
+        position : String,
+        Agency_type:String,
+        country: String,
+        phone: String,
+        code: String,
         picture: String,
         bio: String,
         resetPasswordOTP: String,
         resetPasswordOTPExpire: Date,
         lastFailedLoginTime: { type: Date, default: null },
         isActive: { type: Boolean, default: true },
+        attendecesType:String,
+        hours: [
+            {
+              day: { type: String, },
+              startTime: { type: String, },
+              endTime: { type: String, },
+            },
+          ],
+        attendedEvents: [{
+            event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
+          
+        }],
+        tickets: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }],
 
     },
     
@@ -59,8 +78,6 @@ const userSchema = new mongoose.Schema(
 );
 
 
-userSchema.methods.comparePassword = async function(candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
-};
 
 export default mongoose.model('User', userSchema);
+

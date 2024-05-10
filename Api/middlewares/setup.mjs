@@ -9,7 +9,6 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser'; 
 import helmet from 'helmet'; 
 import cors from 'cors'; 
-import expressSlash from 'express-slash';
 import session from 'express-session';
 import expressDebug from 'express-debug';
 import bcrypt from 'bcrypt';
@@ -32,7 +31,6 @@ const setup_middleware = (app) =>{
     morgan.token('body', (req, res) => JSON.stringify(req.body));
     app.use(bodyParser.json()).use(cookieParser()).use(cors());
     app.set('view engine', 'ejs');
-    app.use(expressSlash());
 }
 
 

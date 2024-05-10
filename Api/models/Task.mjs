@@ -1,4 +1,3 @@
-import path from 'path';
 import mongoose from "mongoose";
 import validator from 'validator';
 
@@ -10,15 +9,14 @@ const taskSchema = new mongoose.Schema(
             trim : true,
         },
 
-        tag: {
+        tag: [{
             type: String,
-            required: true,
-        },
+        }],
 
-        // assignedTo: {
-        //     type: mongoose.Schema.Types.ObjectId,
-        //     ref: 'User',
-        // },
+        assignedTo: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
 
         start :{ 
             default: Date.now,
@@ -34,18 +32,23 @@ const taskSchema = new mongoose.Schema(
 
         status : {
             type : String,
+            enum : ["Pending","Review","Completed","In progress"],
             required : true
+        },
+        eventId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Event',
         }
 
     }
 
 );
  // we create a virtual property to calculate the remaining days
-taskSchema.virtual('remainingDays').get(function() {
-    const now = new Date();
-    const dueDate = this.dueDate.getTime();
-    return Math.ceil((dueDate - now) / (1000 * 3600 * 24));
-});
+// taskSchema.virtual('remainingDays').get(function() {
+//     const now = new Date();
+//     const dueDate = this.dueDate.getTime();
+//     return Math.ceil((dueDate - now) / (1000 * 3600 * 24));
+// });
 
 
 export default mongoose.model("Task", taskSchema);

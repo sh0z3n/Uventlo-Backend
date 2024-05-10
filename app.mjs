@@ -1,6 +1,6 @@
 import express from 'express';
-import { setup_middleware, PORT } from './Api/middlewares/setup.mjs';
-import databaseConnection from './Api/config/database.mjs';
+import { setup_middleware, PORT } from '../Uventlo-Backend/Api/middlewares/setup.mjs';
+import databaseConnection from './Api/config/database.mjs'
 import aiRouter from './Api/routes/aiRoutes.mjs';
 import userRouter from './Api/routes/userRouter.mjs';
 import { sendWelcomeEmail } from './Api/services/emailService.mjs';
@@ -29,10 +29,8 @@ app.use('/ai',aiRouter); // done
 app.use("/auth",passRouter);
 
 
-app.use('/api/payment', paymentRoutes); // the eth not working ( we don't have enough coins to test :( )
-
-
-app.listen(3000, () => {
+// app.use('/api/payment', paymentRoutes); // the eth not working ( we don't have enough coins to test :( )
+app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. Check here: http://localhost:${PORT}/`);
 });
 
@@ -40,7 +38,7 @@ app.listen(3000, () => {
 
 
 app.get("/",(req,res)=>{
-  res.send("playing arround")
+  res.json({message:"mouh"}).status(200);
 })
 
 

@@ -13,26 +13,32 @@ const ticketSchema = new mongoose.Schema(
             required : true,
         },
 
+        qrCode: {
+            type: String
+          },
+          
         email: {
             type :String,
-            required : true,
+            // required : true,
             lowercase:true,
             match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         },
 
         type :{
             type : String,
-            enum : ['Visiter','Manager','idk'],
-            required :true
+            enum : ['Visiter','Manager','idk','Standard'],
         },
 
         date :{
             type:Date,
-            required :false
+            default:Date.now()
         },
-        eventId :{
+        event :{
             type : mongoose.Schema.ObjectId,
             ref : 'Event',
+        },
+        location:{
+            type:String
         },
 
         reservatisons : [

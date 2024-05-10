@@ -8,7 +8,6 @@ import {
   updateUser,
   deleteUser,
   desactivateUser,
-  resetPassword,
   logoutUser
 } from '../controllers/userController.mjs';
 
@@ -66,7 +65,8 @@ router.get('/logout', logoutUser);
 // @route DELETE /api/v1/users/:id
 // @access private
 
-router.delete('/desactivate/:id', deleteUser); //done
+router.post('/desactivate/:id', desactivateUser , logoutUser); //done
+
 
 
 export default router;

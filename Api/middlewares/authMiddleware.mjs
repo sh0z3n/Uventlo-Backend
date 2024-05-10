@@ -44,3 +44,12 @@
         }
         next();
     };
+
+    export const isOrganizer = (req,res,next) => // idk how to use it until ntla9a boutebba 
+{
+    if (req.user.role !== 'organzier' || 'Organizer') {
+        return res.status(403).json({ message: 'Unauthorized: Organizer access required' });
+        }
+        next();
+
+}

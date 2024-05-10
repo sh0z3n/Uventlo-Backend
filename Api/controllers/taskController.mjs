@@ -1,12 +1,14 @@
 import morgan from 'morgan';
 import Task from '../models/Task.mjs';
 import User from '../models/User.mjs';
+import Event from '../models/Event.mjs';
 
 export const createTask = async (req,res) =>{
     try{
-        const { user , title, tag, assignedTo, start, deadline, status } = req.body
+        const { user , title, tag, assignedTo, start, deadline, status , eventId } = req.body
      
             const newTask = new Task({
+                eventId:eventId,
                 user : user,
                 title: title,
                 tag: tag,
@@ -15,22 +17,42 @@ export const createTask = async (req,res) =>{
                 deadline: deadline,
                 status: status
             });
-
-            console.log("wiwjwoijw")
             const assignedUser = await User.findById(assignedTo);
-            console.log("wiwjwoijw")
+
         if (!assignedUser) {
             throw new Error('Assigned user does not exist');
         }
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
 
-            await newTask.save();
-           res.json({ success: true, message: 'Task created successfully', task: newTask })
+        await newTask.save();
+        event.tasks.push(newTask._id);
+        await event.save()
+        res.json({ success: true, message: 'Task created successfully', task: newTask })
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to create task', error: error.message })
     };
 
 };
 
+
+export const getTasksByEventId = async (req, res) => {
+    try {
+      const eventId = req.params.eventId;
+  
+      const tasks = await Task.find({ eventId: eventId });
+  
+      if (!tasks || tasks.length === 0) {
+        return res.status(404).json({ message: 'No tasks found for the specified event' });
+      }
+  
+      res.status(200).json(tasks);
+    } catch (error) {
+      res.status(500).json({ message: 'Error while fetching tasks', error: error.message });
+    }
+  };
 
 export const getTasks = async (req, res) => {
     try {
@@ -47,31 +69,23 @@ export const getTasks = async (req, res) => {
 
 export const updateTask = async (req, res) => {
     try {
-        const { id, title, tag, assignedTo, start, deadline, status } = req.body;
-        if (!id || !title || !tag || !assignedTo || !start || !deadline || !status) {
-            throw new Error('Missing required parameters');
-        }
+        const { id } = req.params;
+        const updates = req.body;
 
-        const task = await Task.findById(id);
+        const task = await Task.findByIdAndUpdate(id, updates, {
+            new: true,
+            runValidators: true,
+        });
         if (!task) {
             throw new Error('Task does not exist');
         }
-
-        task.title = title;
-        task.tag = tag;
-        task.assignedTo = assignedTo;
-        task.start = start;
-        task.deadline = deadline;
-        task.status = status;
-
-        await task.save();
         res.json ({ success: true, message: 'Task updated successfully', task: task });
     } catch (error) {
         res.json( { success: false, message: 'Failed to update task', error: error.message });
     }
 }
 
-export const getTask = async (req, res) => {
+export const getTaskbyID = async (req, res) => {
     try {
         const { id } = req.params;
         if (!id) {
@@ -101,7 +115,7 @@ export const deleteTask = async (req, res) => {
             throw new Error('Task not found');
         }
 
-        await Task.deleteOne({ _id: id }); // Use deleteOne method to delete the task
+        await Task.deleteOne({ _id: id }); 
         res.json({ success: true, message: 'Task deleted successfully' });
     } catch (error) {
         res.status(400).json({ success: false, message: 'Failed to delete task', error: error.message });
@@ -110,3 +124,27 @@ export const deleteTask = async (req, res) => {
 
 
 
+const calculateRemainingTasks = async (eventId) => {
+    const totalTasks = await Task.countDocuments({ event: eventId });
+    const completedTasks = await Task.countDocuments({ event: eventId, status: 'completed' });
+    return totalTasks - completedTasks;
+}
+
+
+export const overallTaskAccomplishment = async (req, res) => {
+    try {
+        const totalEvents = await Event.find();
+        let totalTasks = 0;
+        let completedTasks = 0;
+
+        for (const event of totalEvents) {
+            totalTasks += event.totalTasks;
+            completedTasks += event.completedTasks;
+        }
+
+        const percentage = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
+        res.json({ success: true, message: 'Overall task accomplishment percentage', percentage });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Failed to calculate overall task accomplishment percentage', error: error.message });
+    }
+}
