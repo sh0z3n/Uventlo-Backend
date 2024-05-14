@@ -50,7 +50,8 @@ const userSchema = new mongoose.Schema(
         country: String,
         phone: String,
         code: String,
-        picture: String,
+        plan:{type:String,enum:["vip","standard","free"],default:"standard"},
+        paid:Boolean,
         bio: String,
         resetPasswordOTP: String,
         resetPasswordOTPExpire: Date,
@@ -69,8 +70,20 @@ const userSchema = new mongoose.Schema(
           
         }],
         tickets: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' }],
+        lastCheckout: {
+            type: Date,
+            default: null
+        },
+        totalCheckouts: {
+            type: Number,
+            default: 0
+        },
+        lastCheckoutAmount: Number,
+        totalFailedCheckouts : Number,
+        lastFailedCheckout:Date
 
     },
+    
     
     {
         timestamps: true,

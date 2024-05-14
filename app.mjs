@@ -14,6 +14,7 @@ import { createServer} from 'http'
 import { authMiddleware , isAdmin } from './Api/middlewares/authMiddleware.mjs';
 import paymentRoutes from './Api/routes/paymentRoute.mjs';
 import  Server  from "socket.io";
+import paymentRouter from "./Api/routes/paymentRoute.mjs"
 import  createLiveStream  from './Api/utils/livestream.mjs';
 const app = express();
 
@@ -27,8 +28,7 @@ app.use('/ticket',ticketRouter); // yet the auth too
 app.post('/email',sendWelcomeEmail) // done
 app.use('/ai',aiRouter); // done
 app.use("/auth",passRouter);
-
-
+app.use("/payment",paymentRouter);
 // app.use('/api/payment', paymentRoutes); // the eth not working ( we don't have enough coins to test :( )
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. Check here: http://localhost:${PORT}/`);

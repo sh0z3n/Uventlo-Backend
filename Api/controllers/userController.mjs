@@ -72,7 +72,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' })};
       
-      
+
       const salt = await bcrypt.genSalt(3);
       const hashedPassword = await bcrypt.hash(password, salt);
       const code = crypto.randomInt(100000, 999999).toString();
@@ -235,7 +235,6 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
   const otp = crypto.randomInt(100000, 999999).toString();
 
-  console.log(otp)
   user.resetPasswordOTP = otp;
   user.resetPasswordOTPExpires = Date.now() + 3600000000; 
   await user.save({ force: true });
@@ -313,7 +312,6 @@ export const desactivateUser = asyncHandler(async (req, res) => {
     await user.save();
     res.status(200).json({ message: 'User deactivated successfully' });
   } catch (error) {
-    console.error('Error deactivating user:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

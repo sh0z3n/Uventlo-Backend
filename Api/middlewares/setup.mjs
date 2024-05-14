@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet'; 
 import cors from 'cors'; 
 import session from 'express-session';
+import csrf from 'csurf';
 import expressDebug from 'express-debug';
 import bcrypt from 'bcrypt';
 import rateLimit from 'express-rate-limit';
@@ -18,6 +19,7 @@ import rateLimit from 'express-rate-limit';
 dotenv.config({ path: './Api/config/env/.env' });
 const PORT = process.env.PORT || 8374;
 const users = [];
+const csrfProtection = csrf({ cookie: true });
 const authLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
     max: 20, // limit each IP to 20 requests 
@@ -28,6 +30,7 @@ const setup_middleware = (app) =>{
     app.use(morgan('dev')).use(helmet()).use(compression());
     app.use(express.urlencoded({ extended: false }));
     app.use(authLimiter);
+    // app.use(csrfProtection);
     morgan.token('body', (req, res) => JSON.stringify(req.body));
     app.use(bodyParser.json()).use(cookieParser()).use(cors());
     app.set('view engine', 'ejs');
