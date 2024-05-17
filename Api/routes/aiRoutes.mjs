@@ -65,7 +65,7 @@ router.post('/generate', async (req, res) => {
   try {
     const { prompt } = req.body;
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(" in just 4 lines : " + uventlo + " the most important thing and you have to answer on : " + prompt);
+    const result = await model.generateContent(" in just 4 lines : " + uventlo + " the prompt is  : " + prompt);
     const response = await result.response;
     const text = response.text();
 

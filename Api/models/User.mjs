@@ -57,6 +57,7 @@ const userSchema = new mongoose.Schema(
         resetPasswordOTPExpire: Date,
         lastFailedLoginTime: { type: Date, default: null },
         isActive: { type: Boolean, default: true },
+        googleId: { type: String },
         attendecesType:String,
         hours: [
             {

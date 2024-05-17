@@ -45,9 +45,10 @@
         next();
     };
 
-    export const isOrganizer = (req,res,next) => // idk how to use it until ntla9a boutebba 
+    export const isUser = async (req,res,next) => // idk how to use it until ntla9a boutebba 
 {
-    if (req.user.role !== 'organzier' || 'Organizer') {
+        const user = await User.findById(req.user._id); 
+        if (!user || !user.isActive ) {
         return res.status(403).json({ message: 'Unauthorized: Organizer access required' });
         }
         next();

@@ -1,5 +1,6 @@
 import express from 'express';
 import morgan from 'morgan' ;
+import passport from 'passport';
 
 import { resetPassword } from '../controllers/userController.mjs';
 
@@ -33,5 +34,21 @@ import { activateUser } from '../controllers/userController.mjs';
 // @access Private
 
 router.post('/activate/:id', activateUser);
+
+
+router.get(
+    '/google',
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+  );
+
+  router.get(
+    '/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    (req, res) => {
+      // Successful authentication, redirect or respond as needed
+      res.redirect('/dashboard');
+    }
+  );
+
 
 export default router;
