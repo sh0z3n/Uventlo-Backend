@@ -1,5 +1,5 @@
 import express from 'express';
-import { setup_middleware, PORT } from './src/Uventlo-Backend/Api/middlewares/setup.mjs';
+import { setup_middleware, PORT } from './Api/middlewares/setup.mjs';
 import databaseConnection from './Api/config/database.mjs'
 import aiRouter from './Api/routes/aiRoutes.mjs';
 import userRouter from './Api/routes/userRouter.mjs';
@@ -35,11 +35,13 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}. Check here: http://localhost:${PORT}/`);
 });
 
-
+app.post("/",(req,res)=>{
+  console.log(req.body)
+});
 
 
 app.get("/",(req,res)=>{
-  res.json({message:"uwu"}).status(200);
+  res.json({message:"khtk"}).status(200);
 })
 
 
