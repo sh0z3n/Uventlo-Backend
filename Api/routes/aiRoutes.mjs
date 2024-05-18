@@ -13,7 +13,18 @@ const client = createClient({
 
 client.on('error', (err) => console.log('Redis Client Error', err));
 
-await client.connect();
+async function connectToRedis() {
+  try {
+    await client.connect();
+    console.log('Connected to Redis');
+  } catch (err) {
+    console.error('Error connecting to Redis:', err);
+  }
+}
+
+connectToRedis();
+
+// await client.connect();
 
 async function storePromptAndValue(prompt, value) {
   try {
