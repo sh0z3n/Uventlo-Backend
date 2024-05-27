@@ -66,7 +66,7 @@ const userSchema = new mongoose.Schema(
               endTime: { type: String, },
             },
           ],
-        attendedEvents: [{
+        OrganizedEvents: [{
             event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
           
         }],

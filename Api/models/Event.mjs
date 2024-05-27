@@ -38,10 +38,11 @@ const eventSchema = new mongoose.Schema(
         },
 
 
-        OrganizedBy:{
-            type : [mongoose.Schema.Types.ObjectId],
-            required : true,
-        },
+        OrganizedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+          },
 
         isPublished:{
             type:Boolean,

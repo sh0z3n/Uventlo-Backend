@@ -6,24 +6,20 @@ import asyncHandler from 'express-async-handler';
 
 export const createEvent = asyncHandler(async (req, res) => {
   try {
-    //  for yasseur so he can get to know which dat to get or smthng
-      // const {name, description, date, organzied_by, mode, location, image } = req.body;
-      // const event = new Event({
-      //     name,
-      //     description,
-      //     date,
-      //     location,
-      //     organzied_by, 
-      //     mode,
-      //     image
-      // });
-      // await event.save(); 
-    const Eventdata = req.body;
-    const newevent = new Event(Eventdata);
-    const savedevent = await newevent.save();
-    res.status(201).json(savedevent);
+    const userId = req.user.id; 
+    const Eventdata = { ...req.body, OrganizedBy: userId };
+    const newEvent = new Event(Eventdata);
+    const savedEvent = await newEvent.save();
+
+    const user = await User.findById(userId);
+    if (user) {
+      user.OrganizedEvents.push(savedEvent._id);
+      await user.save();
+    }
+
+    res.status(201).json(savedEvent);
   } catch (error) {
-      res.status(500).json({ message: 'Error while creating event', error: error.message });
+    res.status(500).json({ message: 'Error while creating event', error: error.message });
   }
 });
 
