@@ -64,7 +64,6 @@ export const updateFeedback = asyncHandler(async (req, res) => {
 
 
 
-                                     // IDK IF WE SHALL SEPERATE  // )
 //############################################################################################################
 
 // export const getEventFeedback = asyncHandler(async (req, res) => { 
@@ -121,3 +120,4 @@ export const updateFeedback = asyncHandler(async (req, res) => {
   
 //     res.status(200).json(ratings);
 //   });
+//############################################################################################################

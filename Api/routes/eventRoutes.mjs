@@ -1,6 +1,6 @@
 import express from 'express';
 import {isAdmin} from '../middlewares/isAdmin.mjs';
-import { createEvent,number_attendences, getAllEvents, getEventById,NextEventDate, updateEvent, deleteEvent,  getLastEventRemainingTasks  , getEventAttendeeTypeCounts } from '../controllers/eventController.mjs';
+import { createEvent,number_attendences, getAllEvents, getEventById,getEventbyuserID,NextEventDate, updateEvent, deleteEvent,  getLastEventRemainingTasks  , getEventAttendeeTypeCounts } from '../controllers/eventController.mjs';
 import { getTasksByEventId } from '../controllers/taskController.mjs';
 
 const router = express.Router();
@@ -19,7 +19,11 @@ router.get('/list', getAllEvents); // done
 // @route GET /api/v1/events/:id
 // @access Public
 router.get('/:id', getEventById); // done
+// @desc Get a specific user  events
+// @route GET /api/v1/events/:id
+// @access Public
 
+router.get("/user/:id" , getEventbyuserID);
 // @desc Update an event
 // @route PUT /api/v1/events/:id
 // @access Admin

@@ -10,9 +10,7 @@ import {
   desactivateUser,
   logoutUser
 } from '../controllers/userController.mjs';
-
-
-import { authMiddleware , isAdmin } from '../middlewares/authMiddleware.mjs';
+import { authMiddleware , isAdmin , googleAuth } from '../middlewares/authMiddleware.mjs';
 
 
 const router = express.Router();
@@ -20,7 +18,7 @@ const router = express.Router();
 // @desc Get all users
 // @route GET /api/v1/users
 // @access Admin
-router.get('/list', authMiddleware  ,isAdmin, getAllUsers);  // done
+router.get('/list' , getAllUsers);  // done
 
 // @desc Get a specific user
 // @route GET /api/v1/users/:id

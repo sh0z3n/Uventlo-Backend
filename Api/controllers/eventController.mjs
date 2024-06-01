@@ -6,18 +6,9 @@ import asyncHandler from 'express-async-handler';
 
 export const createEvent = asyncHandler(async (req, res) => {
   try {
-    const userId = req.user.id; 
-    const Eventdata = { ...req.body, OrganizedBy: userId };
-    const newEvent = new Event(Eventdata);
-    const savedEvent = await newEvent.save();
-
-    const user = await User.findById(userId);
-    if (user) {
-      user.OrganizedEvents.push(savedEvent._id);
-      await user.save();
-    }
-
-    res.status(201).json(savedEvent);
+    const newEvent = await new Event({ ...req.body, organizedBy: req.user.id }).save();
+    await User.findByIdAndUpdate(req.user.id, { $push: { organizedEvents: { event: newEvent._id } } });
+    res.status(201).json(newEvent);
   } catch (error) {
     res.status(500).json({ message: 'Error while creating event', error: error.message });
   }
@@ -65,6 +56,24 @@ export const updateEvent = asyncHandler(async (req, res) => {
     res.status(500).json({ message: 'Error while updating event', error: error.message });
   }
 });
+
+
+export const getEventbyuserID = asyncHandler(async(req,res)=>{
+  try {
+    const id = req.params.id;
+    const user = await User.findById(id).populate('OrganizedEvents.event');
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.OrganizedEvents.length === 0) {
+      return res.status(404).json({ message: "This user doesn't have any events" });
+    }
+    return res.status(200).json(user.OrganizedEvents);
+  }
+  catch(error){
+    return res.status(500).json({message:"internal server error"})
+  }
+})
 
 export const deleteEvent = asyncHandler(async (req, res) => {
     try {

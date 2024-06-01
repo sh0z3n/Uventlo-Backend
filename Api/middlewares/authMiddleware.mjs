@@ -1,6 +1,9 @@
     import jwt from 'jsonwebtoken';
     import asyncHandler from 'express-async-handler';
     import User from '../models/User.mjs';
+    import { OAuth2Client } from 'google-auth-library';
+
+    
 
     export const authMiddleware = asyncHandler(async (req, res, next) => {
         const token = (req.headers.authorization && req.headers.authorization.split(' ')[1]) || req.cookies.token;
@@ -53,4 +56,38 @@
         }
         next();
 
-}
+};
+
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const googleAuth = async (req, res, next) => {
+  try {
+    const { googleIdToken } = req.body;
+
+    if (!googleIdToken) {
+      return next(); // Skip authentication if googleIdToken mkanch
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: googleIdToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({ name, email });
+    }
+
+    const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    req.authToken = jwtToken;
+
+    next();
+  } catch (error) {
+    res.status(400).json({ message: 'Google authentication failed', error });
+  }
+};

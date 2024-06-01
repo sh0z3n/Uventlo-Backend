@@ -155,6 +155,7 @@
     "glob": "^10.3.10",
     "glob-parent": "^5.1.2",
     "globalthis": "^1.0.3",
+    "google-auth-library": "^9.10.0",
     "gopd": "^1.0.1",
     "graceful-fs": "^4.2.11",
     "graphql": "^15.8.0",
