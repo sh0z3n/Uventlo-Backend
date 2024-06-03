@@ -49,7 +49,7 @@ router.post('/activate/:id', activateUser);
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET);
 
 router.get('/google', (req, res) => {
-    const redirectUri = 'http://uventlo.icu/auth/google/callback';
+    const redirectUri = 'http://uventlo.icu:1337/auth/google/callback';
     const url = client.generateAuthUrl({
         access_type: 'offline',
         scope: ['profile', 'email'],
@@ -61,7 +61,7 @@ router.get('/google', (req, res) => {
 router.get('/google/callback', async (req, res) => {
     try {
         const { code } = req.query;
-        const redirectUri = 'http://uventlo.icu/auth/google/callback';
+        const redirectUri = 'http://uventlo.icu:1337/auth/google/callback';
 
         const { tokens } = await client.getToken({
             code,
