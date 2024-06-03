@@ -26,6 +26,13 @@ import User from './Api/models/User.mjs';
 
 const app = express();
 setup_middleware(app); // done
+const corsOptions = {
+  origin: '*',
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors()); //
 
 app.use('/floor',floorRouter); // yet the auth
 app.use('/users' ,userRouter); // yet the auth 
