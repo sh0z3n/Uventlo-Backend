@@ -1,54 +1,27 @@
-import User from '../models/User.mjs'
-import validator from 'validator'
+import User from '../models/User.mjs';
+import validator from 'validator';
 import asyncHandler from 'express-async-handler';
-import bcrypt from 'bcrypt'
-import zxcvbn from 'zxcvbn'
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import zxcvbn from 'zxcvbn';
 import crypto from 'crypto';
-import { sendWelcomeEmail } from '../services/emailService.mjs';
-import { sendResetPasswordEmail } from '../services/emailService.mjs';
-import { sendConfirmationCode } from '../services/emailService.mjs';
-import { sendDeactivationEmail } from '../services/emailService.mjs';
-
+import { sendWelcomeEmail, sendResetPasswordEmail, sendConfirmationCode, sendDeactivationEmail } from '../services/emailService.mjs';
+import upload from '../middlewares/fileUpload.mjs';
 
 // @desc    Get all  users
 
-export const getAllUsers =  async (req,res) =>{
-        try
-        {
-            const users = await User.find();
-            if (!users) {
-                return res.status(404).json({message:'No Users Found'});
-            };
-            return res.status(200).json(users);
-        }
-
-        catch(error)
-        {
-            return res.status(500).json({message:'Error while fetching users , check your connection',error:error.message});
-        }
-
-};
-
-// @desc    Get a specific user
-
-export const getUserById = asyncHandler(async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.status(200).json(user);
-  } catch (err) {
-    return res.status(500).json({ message: 'Error while fetching user, check your connection', error: err.message });
-  }
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find();
+  return users ? res.status(200).json(users) : res.status(404).json({ message: 'No Users Found' });
 });
 
+// desc get a user by id
 
-// desc Register a user
+export const getUserById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  return user ? res.status(200).json(user) : res.status(404).json({ message: 'User not found' });
+});
+
 
 export const registerUser = asyncHandler(async (req, res) => {
     try {
@@ -84,12 +57,9 @@ export const registerUser = asyncHandler(async (req, res) => {
         isActive: false,
         code
       });
-    // await sendWelcomeEmail(name,email);
-    // await user.save({ force: true });
 
-    await sendConfirmationCode(email, code);
+      await sendConfirmationCode(email, code);
 
-      
       const token = jwt.sign({
         userId: user._id,
         userRole: user.role 
@@ -108,7 +78,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 export const loginUser = asyncHandler(async (req, res) => {
     try 
     {
-        const { email, password } = req.body;
+        const { email, password , rememberMe } = req.body;
         if (!validator.isEmail(email)) {
             return res.status(400).json({ message: 'Invalid email format' });
         }
@@ -141,15 +111,15 @@ export const loginUser = asyncHandler(async (req, res) => {
           user.loginAttempts = 0; // Reset login attempts
           user.lastFailedLoginTime = null; 
 
-          await user.save();
-
+        await user.save();
+        const expiresIn = rememberMe ? '30d' : '1d'  
         const token = jwt.sign({
-            userId: user._id,
-            userRole: user.role,
-        }, process.env.JWT_SECRET);
+          userId: user._id,
+          userRole: user.role,
+      }, process.env.JWT_SECRET, { expiresIn });
 
         res.set('Authorization', `Bearer ${token}`);
-        res.cookie('token', token, { httpOnly: true, maxAge: 2 * 24 * 60 * 60 * 1000 }); // 2 days expiry
+        res.cookie('token', token, { httpOnly: true, maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 2 * 24 * 60 * 60 * 1000 }); 
         res.status(200).json({ message: 'User logged in successfully', token });
     }
     catch  (error)
@@ -358,3 +328,18 @@ export const activateUser = asyncHandler(async (req, res) => {
   }});
 
 
+  export const updateProfilePicture = asyncHandler(async (req, res) => {
+    const userId = req.params.id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    upload.single('profilePicture')(req, res, async (err) => {
+      if (err) return res.status(400).json({ message: 'Error uploading profile picture' });
+      if (req.file) {
+        user.profilePicture = `http://uventlo.icu/${req.file.filename}`;
+        await user.save();
+        res.status(200).json({ message: 'Profile picture updated successfully', profilePicture: user.profilePicture });
+      } else {
+        res.status(400).json({ message: 'No file uploaded' });
+      }
+    });
+  });

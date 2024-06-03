@@ -146,6 +146,7 @@
     "formats": "^1.0.0",
     "forwarded": "^0.2.0",
     "fresh": "^0.5.2",
+    "fs": "^0.0.1-security",
     "function-bind": "^1.1.2",
     "function.prototype.name": "^1.1.6",
     "functions-have-names": "^1.2.3",

@@ -1,16 +1,14 @@
 import express from 'express';
-import morgan from 'morgan' ;
 import {
   getAllUsers,
   getUserById,
-  registerUser,
-  loginUser,
   updateUser,
   deleteUser,
   desactivateUser,
-  logoutUser
+  logoutUser,
+  updateProfilePicture
 } from '../controllers/userController.mjs';
-import { authMiddleware , isAdmin , googleAuth } from '../middlewares/authMiddleware.mjs';
+import { authMiddleware , isAdmin  } from '../middlewares/authMiddleware.mjs';
 
 
 const router = express.Router();
@@ -24,17 +22,6 @@ router.get('/list' , getAllUsers);  // done
 // @route GET /api/v1/users/:id
 // @access public
 router.get('/:id',  getUserById ); //done 
-
-// @desc Register a new user
-// @route POST /api/v1/auth/register
-// @access Public
-router.post('/register', registerUser); // done
-
-// @desc Login a user
-// @route POST /api/v1/auth/login
-// @access Public
-router.post('/login', loginUser); // done
-
 
 // @desc Update a user
 // @route PUT /api/v1/users/:id
@@ -52,19 +39,17 @@ router.patch('/:id',  updateUser);//done
 router.delete('/:id' ,deleteUser); //done 
 
 
-//@desc Logout a user
-//@route GET /api/v1/auth/logout
-//@access Private
-
-router.get('/logout', logoutUser);
-
-
 // @desc Desactivate a user
 // @route DELETE /api/v1/users/:id
 // @access private
 
 router.post('/desactivate/:id', desactivateUser , logoutUser); //done
 
+//@desc Updating the user 's pic 
+//@router put /user/id/....
+//@acess private 
+
+router.route('/:id/profile-picture').put(updateProfilePicture);
 
 
 export default router;

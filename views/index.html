@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Auth Test</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        function handleCredentialResponse(response) {
+            const idToken = response.credential;
+            fetch('/auth/google/callback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ idToken }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    document.cookie = `token=${data.token}; path=/; max-age=${2 * 24 * 60 * 60}`;
+                    alert('Login successful');
+                } else {
+                    alert('Login failed');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <h1>Google Auth Test</h1>
+    <div id="g_id_onload"
+         data-client_id="44631013144-i5bvncqkd0svcgj6qbeedcahpraeocas.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse">
+    </div>
+    <div class="g_id_signin"
+         data-type="standard">
+    </div>
+</body>
+</html>

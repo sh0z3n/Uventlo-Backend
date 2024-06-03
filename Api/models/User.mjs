@@ -53,11 +53,12 @@ const userSchema = new mongoose.Schema(
         plan:{type:String,enum:["vip","standard","free"],default:"standard"},
         paid:Boolean,
         bio: String,
+        profilePicture:String,
         resetPasswordOTP: String,
         resetPasswordOTPExpire: Date,
         lastFailedLoginTime: { type: Date, default: null },
         isActive: { type: Boolean, default: true },
-        googleId: { type: String },
+        googleId: { type: String ,unique: true, sparse: true },
         attendecesType:String,
         hours: [
             {

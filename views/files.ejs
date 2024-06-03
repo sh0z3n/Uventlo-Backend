@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Uploaded Files</title>
+</head>
+<body>
+    <h1>Uploaded Files</h1>
+    <ul>
+        <% files.forEach(function(file) { %>
+            <li><a href="/uploads/<%= file %>"><%= file %></a></li>
+        <% }); %>
+    </ul>
+</body>
+</html>
