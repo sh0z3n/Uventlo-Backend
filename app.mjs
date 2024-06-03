@@ -33,7 +33,6 @@ app.use('/event',eventRouter); // yet the auth too
 app.use('/task',taskRouter); // yet the auth
 // app.use('/feedback',feedbackRouter); not finsihed yet
 app.use('/ticket',ticketRouter); // yet the auth too
-// app.post('/email',sendWelcomeEmail) // done
 app.use('/ai',aiRouter); // done
 app.use("/auth",passRouter);
 app.use("/payment",paymentRouter);

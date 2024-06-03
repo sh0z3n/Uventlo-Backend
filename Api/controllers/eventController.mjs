@@ -6,8 +6,8 @@ import asyncHandler from 'express-async-handler';
 
 export const createEvent = asyncHandler(async (req, res) => {
   try {
-    const newEvent = await new Event({ ...req.body, organizedBy: req.user.id }).save();
-    await User.findByIdAndUpdate(req.user.id, { $push: { organizedEvents: { event: newEvent._id } } });
+    const newEvent = await new Event({ ...req.body, Owner: req.body.id }).save();
+    await User.findByIdAndUpdate(req.body.id, { $push: { OrganizedEvents: { event: newEvent._id } } });
     res.status(201).json(newEvent);
   } catch (error) {
     res.status(500).json({ message: 'Error while creating event', error: error.message });
@@ -61,15 +61,28 @@ export const updateEvent = asyncHandler(async (req, res) => {
 export const getEventbyuserID = asyncHandler(async(req,res)=>{
   try {
     const id = req.params.id;
-    const user = await User.findById(id).populate('OrganizedEvents.event');
+    const user = await User.findById(id);
+    console.log(user)
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    if (user.OrganizedEvents.length === 0) {
-      return res.status(404).json({ message: "This user doesn't have any events" });
+    if(user.isActive != true){
+      return res.status(403).json({message:"User is not Activated yet"})
     }
-    return res.status(200).json(user.OrganizedEvents);
-  }
+    
+    if (user.OrganizedEvents.length == 0) {
+      return res.status(404).json({ message: "User has not created any events"});
+    }
+    const events = [];
+
+    for (const organizedEvent of user.OrganizedEvents) {
+      const event = await Event.findById(organizedEvent.event);
+      if (event) {
+        events.push(event);
+      }
+    }
+
+    return res.status(200).json(events);  }
   catch(error){
     return res.status(500).json({message:"internal server error"})
   }

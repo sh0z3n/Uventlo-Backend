@@ -38,10 +38,10 @@ const eventSchema = new mongoose.Schema(
         },
 
 
-        OrganizedBy: {
+        Owner: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: true,
+            // required: true,
           },
 
         isPublished:{
