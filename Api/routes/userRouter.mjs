@@ -6,7 +6,10 @@ import {
   deleteUser,
   desactivateUser,
   logoutUser,
-  updateProfilePicture
+  updateProfilePicture,
+  addContact,
+  getContacts,
+  getContact
 } from '../controllers/userController.mjs';
 import { authMiddleware , isAdmin  } from '../middlewares/authMiddleware.mjs';
 
@@ -50,6 +53,10 @@ router.post('/desactivate/:id', desactivateUser , logoutUser); //done
 //@acess private 
 
 router.route('/:id/profile-picture').put(updateProfilePicture);
+
+router.get("/contacts/:id",  getContacts); //done
+router.get("/:userId/contact/:id", getContact); //done
+router.post("/contacts/:id", addContact);
 
 
 export default router;

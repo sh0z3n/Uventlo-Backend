@@ -44,6 +44,12 @@ const userSchema = new mongoose.Schema(
             instagram: String,
             type: Map,
         },
+        contacts: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Contact',
+            },
+        ],
         location : String,
         position : String,
         Agency_type:String,
@@ -85,6 +91,7 @@ const userSchema = new mongoose.Schema(
         lastFailedCheckout:Date
 
     },
+
     
     
     {

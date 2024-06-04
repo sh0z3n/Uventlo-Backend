@@ -23,14 +23,18 @@ import  createLiveStream  from './Api/utils/livestream.mjs';
 // import googleAuthRouter from './Api/routes/google.mjs';
 import { OAuth2Client } from 'google-auth-library';
 import User from './Api/models/User.mjs';
-
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { credentials } from 'amqplib';
 const app = express();
 setup_middleware(app); // done
 const corsOptions = {
   origin: '*',
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
 };
-
+dotenv.config();
 app.use(cors(corsOptions));
 app.options('*', cors()); //
 

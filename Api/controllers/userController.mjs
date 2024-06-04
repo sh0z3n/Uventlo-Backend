@@ -1,4 +1,5 @@
 import User from '../models/User.mjs';
+import Contact from '../models/Contact.mjs';
 import validator from 'validator';
 import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcrypt';
@@ -343,3 +344,61 @@ export const activateUser = asyncHandler(async (req, res) => {
       }
     });
   });
+
+
+
+  export const addContact = async (req, res) => {
+    try {
+        console.log("id",req.params.id)
+        const user = await User.findById(req.params.id)
+        console.log(user)
+        const userContact = await User.findById(req.body.contactId)
+        const existingContact = await Contact.findOne({ user: user._id, contact: userContact._id })
+        if (existingContact) {
+            return res.status(400).json({ message: 'Contact already exists' })
+        }
+        const contact = await Contact.create({ user: user._id, contact: userContact._id })
+        user.contacts.push(contact._id)
+        const contact2 = await Contact.create({ user: userContact._id, contact: user._id })
+        userContact.contacts.push(contact2._id)
+        await user.save()
+        await userContact.save()
+        res.status(201).json({ message: 'Contact added successfully', contact })
+    } catch (error) {
+        console.log("can't add contact")
+        res.status(500).json(error)
+    }
+}
+
+
+export const getContacts = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' })
+        }
+        const contacts = await Contact.find({ user: user._id }).populate('contact');
+        res.status(200).json(contacts)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const getContact = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId).populate('contacts');
+        let userContact = user.contacts.map(contact => contact.populate('contact'))
+        console.log("contact dasdasdas ddsa", userContact)
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' })
+        }
+        const contact = userContact.find(contact => contact.contact._id == req.params.contactId)
+        if(!contact){
+            return res.status(404).json({ message: 'Contact not found' })
+        }
+
+        res.status(200).json(contact)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
