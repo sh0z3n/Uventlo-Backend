@@ -402,7 +402,8 @@
   },
   "scripts": {
     "start": "node app.mjs",
-    "dev": "nodemon app.mjs"
+    "dev": "nodemon app.mjs",
+    "files" : "ls ."
   },
   "keywords": [],
   "author": "",
