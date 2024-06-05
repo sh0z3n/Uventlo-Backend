@@ -9,7 +9,7 @@ export const createFloor = async (req, res) => {
         //     name,
         //     spots,
         //     floormap,
-        //     description,
+        //     description, // this is the data you need to use 
         //     reservations
         // });
         // const savedFloor = await newFloor.save();

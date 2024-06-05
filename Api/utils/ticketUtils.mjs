@@ -1,1 +1,0 @@
-//: This file can contain utility functions related to ticket management, such as generating unique ticket codes, validating ticket data, or performing ticket-related calculations.

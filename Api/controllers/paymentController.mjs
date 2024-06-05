@@ -1,15 +1,14 @@
 // paymentController.js
 import paypal from 'paypal-rest-sdk';
 import Web3 from 'web3';
+dotenv.config({ path: './Api/config/env/.env' });
 
-// Configure PayPal SDK with sandbox credentials
 paypal.configure({
   'mode': 'sandbox',
   'client_id': 'AfWJUWPr037zo5CSJizhjKck4hJE5koNkjCi_aOKTobqYoyjSj_fJojRPty8477JuFyVYdqrcdqa-xyp',
-  'client_secret': 'EHlVq5S9jOA7Ih82OBqmf4BF5v9APR7lIguNAuixAcdN9-Wt15ccpXvkZ9Ic_qthiqQI_gmgEkjeybNn'
+  'client_secret': process.env.paypalSecret
 });
 
-// Configure web3 with your Ethereum node provider
 const infuraProjectId = 'b6d93a6200c54524a684c370e9189861'; // Infura API Key
 const infuraEndpoint = `https://mainnet.infura.io/v3/${infuraProjectId}`;
 const web3 = new Web3(infuraEndpoint);
@@ -27,7 +26,7 @@ export const createPaypalPayment = async (req, res) => {
     },
     "transactions": [{
       "amount": {
-        "total": "0.01", // Placeholder amount for testing, replace with actual amount
+        "total": "0.01", 
         "currency": "USD"
       },
       "description": "Test payment for uventlo"
@@ -50,7 +49,7 @@ export const createPaypalPayment = async (req, res) => {
   }
 };
 
-// Define function to handle PayPal payment success
+
 export const paypalPaymentSuccess = async (req, res) => {
   const payerId = req.query.PayerID;
   const paymentId = req.query.paymentId;
@@ -60,7 +59,7 @@ export const paypalPaymentSuccess = async (req, res) => {
     "transactions": [{
       "amount": {
         "currency": "USD",
-        "total": "10.00" // Placeholder amount for testing, replace with actual amount
+        "total": "10.00" 
       }
     }]
   };
@@ -81,26 +80,25 @@ export const createEthereumPayment = async (req, res) => {
    const infuraEndpoint = 'https://mainnet.infura.io/v3/b6d93a6200c54524a684c370e9189861';
    const web3 = new Web3(infuraEndpoint);
  
-   // Sample transaction data (modify as needed)
-   const fromAddress = "0x86b2151F552417ad6f142B4FD9ad0adf1f6f3337"; // Replace with actual address (optional)
-   const toAddress = '0x985DDFbF0E30c7F7eD608D0439C0C3aA2b47604C'; // Replace with actual address (optional)
-   const value = '0'; // 1 ETH in Wei
+   const fromAddress = req.body.addrss1;
+   const toAddress = req.body.adress2; 
+   const value = '0'; 
  
    try {
      const tx = {
        from: fromAddress,
        to: toAddress,
        value,
-       gas: 10, // Gas limit (adjust as needed)
-       gasPrice: '0', // Gas price (adjust as needed)
+       gas: 10, 
+       gasPrice: '0', 
      };
  
-     // Simulate transaction (doesn't actually send anything)
+     // Simulate transaction 
      const simulatedTxHash = await web3.eth.getTransactionReceipt(tx.hash); // Replace with a random hash generation
  
      return simulatedTxHash;
    } catch (error) {
      console.error('Error simulating Ethereum transaction:', error);
-     throw error; // Re-throw for handling in calling code
+     throw error; 
    }
  };

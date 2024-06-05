@@ -1,5 +1,5 @@
 import express from 'express';
-// import { authMiddleware, isAdmin } from '../middlewares/authMiddleware.mjs';
+import { authMiddleware, isAdmin } from '../middlewares/authMiddleware.mjs';
 import { createTicket  , getTickets  , getTicket ,updateTicket,  deleteTicket } from './../controllers/ticketController.mjs'
 
 
@@ -9,31 +9,31 @@ const router = express.Router();
 //@route POST /api/tickets/create
 //@access Private
 
-router.post('/create',createTicket);
+router.post('/create',authMiddleware,createTicket);
 
 //@desc Get all tickets
 //@route GET /api/tickets
-//@access Private
+//@access Admin
 
-router.get('/list',getTickets);
+router.get('/list',authMiddleware,getTickets);
 
 //@desc Get a ticket
 //@route GET /api/tickets/:id
 //@access Private
 
-router.get('/:id',getTicket);
+router.get('/:id',authMiddleware,getTicket);
 
 //@desc Update a ticket
 //@route PUT /api/tickets/:id
 //@access Private
 
-router.put('/:id',updateTicket);
+router.put('/:id',authMiddleware ,updateTicket);
 
 //@desc Delete a ticket
 //@route DELETE /api/tickets/:id
 //@access Private
 
-router.delete('/:id',deleteTicket);
+router.delete('/:id',authMiddleware , deleteTicket);
 
 //@desc make a qr code for a ticket
 //@route GET /api/tickets/:id/qrcode

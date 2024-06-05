@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
 
         role :{
             type : String,
-            enum : ['user','organizer'],
+            enum : ['user','admin','organizer'],
             default : 'user',
         },
         loginAttempts: { type: Number, default: 0 } ,
@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema(
         country: String,
         phone: String,
         code: String,
-        plan:{type:String,enum:["vip","standard","free"],default:"standard"},
+        plan:{type:String,enum:["vip","standard","agency"],default:"standard"},
         paid:Boolean,
         bio: String,
         profilePicture:String,

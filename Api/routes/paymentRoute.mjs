@@ -3,7 +3,7 @@ import { ChargilyClient } from '@chargily/chargily-pay';
 import User from '../models/User.mjs';
 import fetch from 'node-fetch';
 import crypto from 'crypto';
-
+import bodyParser from 'body-parser';
 const apiSecretKey = "test_sk_sxZuGGVKSAF2Xa5FfzVgpq7hAR8cqfZDNk8vhqfI";
 
 const router = express.Router();
@@ -11,10 +11,14 @@ const client = new ChargilyClient({
   api_key: "test_sk_sxZuGGVKSAF2Xa5FfzVgpq7hAR8cqfZDNk8vhqfI",
   mode: "test"
 });
-
+router.use(bodyParser.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
 router.post('/offres', async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name , description } = req.body;
     const product = await client.createProduct({ name });
     res.status(201).json(product);
   } catch (error) {
@@ -37,7 +41,7 @@ router.post('/products/:productId', async (req, res) => {
 
 router.post('/checkouts', async (req, res) => {
   try {
-    const { items } = req.body;
+    const { items , description } = req.body;
     const options = {
       method: "POST",
       headers: {
@@ -46,7 +50,8 @@ router.post('/checkouts', async (req, res) => {
       },
       body: JSON.stringify({
         items,
-        success_url: "http://uventlo.icu:1337"
+        description,
+        success_url: "http://uventlo.icu:1337/profile"
       }),
     };
     const response = await fetch("https://pay.chargily.net/test/api/v2/checkouts", options);
@@ -59,10 +64,8 @@ router.post('/checkouts', async (req, res) => {
 });
 
 router.post('/webhook', async (req, res) => {
-  // Log all headers
   console.log('Headers:', req.headers);
 
-  // Retrieve and log the signature
   const signature = req.get('signature');
   if (!signature) {
     console.error('Missing signature header');
@@ -70,44 +73,33 @@ router.post('/webhook', async (req, res) => {
   }
   console.log('Received signature:', signature);
 
-  // Parse and log the payload
   const payload = JSON.stringify(req.body);
   console.log('Payload:', payload);
 
-  // Compute and log the HMAC
   const computedSignature = crypto.createHmac('sha256', apiSecretKey)
     .update(payload)
     .digest('hex');
   console.log('Computed signature:', computedSignature);
 
-  // Compare signatures and handle errors
   if (computedSignature !== signature) {
     console.error('Signature mismatch');
     return res.sendStatus(403);
   }
-
+  const userId = req.user._id
   const event = req.body;
-  console.log('Event:', event);
-
   const checkout = event.data;
-  console.log('Checkout:', checkout);
-  const userId = checkout.customer_id;
-
   try {
     switch (event.type) {
       case 'checkout.paid':
+        const offer = checkout.description
+        console.log(offer);
         await User.findByIdAndUpdate(userId, {
-          lastCheckout: new Date(),
-          $inc: { totalCheckouts: 1 },
-          lastCheckoutAmount: checkout.amount,
-          plan: 'vip'
+          plan:offer,
         }, { new: true });
         break;
 
       case 'checkout.failed':
         await User.findByIdAndUpdate(userId, {
-          lastFailedCheckout: new Date(),
-          $inc: { totalFailedCheckouts: 1 }
         }, { new: true });
         break;
 

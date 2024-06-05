@@ -6,8 +6,21 @@ import asyncHandler from 'express-async-handler';
 
 export const createEvent = asyncHandler(async (req, res) => {
   try {
-    const newEvent = await new Event({ ...req.body, Owner: req.body.id }).save();
-    await User.findByIdAndUpdate(req.body.id, { $push: { OrganizedEvents: { event: newEvent._id } } });
+    const user = await User.findById(req.body.id);
+    switch(user.plan) {
+      case 'vip':
+        if (user.OrganizedEvents.length > 11) {
+          return res.status(401).json({ message: "You can't create more events on the VIP plan" });
+        }
+        break;
+      case 'standard':
+        if (user.OrganizedEvents.length > 3) {
+          return res.status(401).json({ message: "You can't create more events on the Standard plan" });
+        }
+        break;
+    } 
+    const newEvent = await new Event({ ...req.body, Owner: req.user._id }).save();
+    await User.findByIdAndUpdate(req.user._id, { $push: { OrganizedEvents: { event: newEvent._id } } });
     res.status(201).json(newEvent);
   } catch (error) {
     res.status(500).json({ message: 'Error while creating event', error: error.message });

@@ -85,7 +85,7 @@ router.post('/generate', async (req, res) => {
 
     res.json({ text ,promptsAndValues });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     res.status(500).json({ error: 'Uventlo AI Bot is not responding ' });
   }
 });

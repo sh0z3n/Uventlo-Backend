@@ -1,6 +1,7 @@
 
 import express from 'express';
-
+import Feedback from '../models/Feedback.mjs'
+import asyncHandler from '../middlewares/asyncHandler.mjs'
 
 export const createFeedback = asyncHandler(async (req, res) => {
     try {
@@ -62,62 +63,57 @@ export const updateFeedback = asyncHandler(async (req, res) => {
     }
 });
 
-
-
-//############################################################################################################
-
-// export const getEventFeedback = asyncHandler(async (req, res) => { 
-//     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//       res.status(404);
-//       throw new Error('Invalid event ID');
-//     }
+export const getEventFeedback = asyncHandler(async (req, res) => { 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      res.status(404);
+      throw new Error('Invalid event ID');
+    }
   
-//     const feedback = await Feedback.find({ eventId: req.params.id }).populate('user', 'name email');
+    const feedback = await Feedback.find({ eventId: req.params.id }).populate('user', 'name email');
   
-//     if (!feedback) {
-//       res.status(404);
-//       throw new Error('No feedback found for this event');
-//     }
+    if (!feedback) {
+      res.status(404);
+      throw new Error('No feedback found for this event');
+    }
   
-//     res.status(200).json(feedback);
-//   });
+    res.status(200).json(feedback);
+  });
   
-//   // @desc Rate an event
-//   // @route POST /api/v1/events/:id/rate
-//   // @access Private (Authenticated User)
-//   export const rateEvent = asyncHandler(async (req, res) => {
-//     const { rating } = req.body;
+  // @desc Rate an event
+  // @route POST /api/v1/events/:id/rate
+  // @access Private (Authenticated User)
+  export const rateEvent = asyncHandler(async (req, res) => {
+    const { rating } = req.body;
   
-//     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//       res.status(404);
-//       throw new Error('Invalid event ID');
-//     }
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      res.status(404);
+      throw new Error('Invalid event ID');
+    }
   
-//     const eventRating = await Rating.create({
-//       eventId: req.params.id,
-//       user: req.user._id,
-//       rating,
-//     });
+    const eventRating = await Rating.create({
+      eventId: req.params.id,
+      user: req.user._id,
+      rating,
+    });
   
-//     res.status(201).json(eventRating);
-//   });
+    res.status(201).json(eventRating);
+  });
   
-//   // @desc Get ratings for an event
-//   // @route GET /api/v1/events/:id/ratings
-//   // @access Public
-//   export const getEventRatings = asyncHandler(async (req, res) => {
-//     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//       res.status(404);
-//       throw new Error('Invalid event ID');
-//     }
+  // @desc Get ratings for an event
+  // @route GET /api/v1/events/:id/ratings
+  // @access Public
+  export const getEventRatings = asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      res.status(404);
+      throw new Error('Invalid event ID');
+    }
   
-//     const ratings = await Rating.find({ eventId: req.params.id }).populate('user', 'name email');
+    const ratings = await Rating.find({ eventId: req.params.id }).populate('user', 'name email');
   
-//     if (!ratings) {
-//       res.status(404);
-//       throw new Error('No ratings found for this event');
-//     }
+    if (!ratings) {
+      res.status(404);
+      throw new Error('No ratings found for this event');
+    }
   
-//     res.status(200).json(ratings);
-//   });
-//############################################################################################################
+    res.status(200).json(ratings);
+  });
