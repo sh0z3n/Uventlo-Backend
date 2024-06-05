@@ -1,4 +1,5 @@
 import User from '../models/User.mjs';
+import Contact from '../models/Contact.mjs';
 import validator from 'validator';
 import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcrypt';

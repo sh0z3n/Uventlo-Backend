@@ -23,7 +23,7 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 
 };
-
+dotenv.config();
 app.use(cors(corsOptions));
 app.options('*', cors()); 
 

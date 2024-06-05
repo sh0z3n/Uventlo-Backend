@@ -8,8 +8,8 @@ import { dirname, resolve } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 
-dotenv.config({ path: path.resolve(__dirname, 'env', '.env') });
-
+// dotenv.config({ path: path.resolve(__dirname, 'env', '.env') });
+dotenv.config();
 const uri = process.env.MONGODB_URI;
 mongoose.connect(uri, {
     // useNewUrlParser: true,

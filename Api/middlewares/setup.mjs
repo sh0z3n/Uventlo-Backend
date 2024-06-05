@@ -17,7 +17,7 @@ import bcrypt from 'bcrypt';
 import rateLimit from 'express-rate-limit';
 
 
-dotenv.config({ path: './Api/config/env/.env' });
+dotenv.config();
 const PORT = process.env.PORT || 8374;
 const users = [];
 const __filename = fileURLToPath(import.meta.url);
