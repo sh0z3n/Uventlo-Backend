@@ -6,7 +6,7 @@ const port = 3000;
 
 
 app.use(express.json());
-const apiSecretKey = 'test_sk_ThrFkmgj93zg4F2AL8G06BPS9AAcIXjTKiQgZxDy';
+const apiSecretKey = process.Env.Api-key;
 
 
 app.post('/webhook', (req, res) => {
